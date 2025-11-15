@@ -1,0 +1,27 @@
+
+syntax = "proto3";
+
+package lexai;
+
+message ChatMessage {
+  string id = 1;
+  string sender = 2;
+  string text = 3;
+  string timestamp = 4;
+  string type = 5;
+  bool is_streaming = 6;
+}
+
+message ActionMessage {
+  string id = 1;
+  string action_type = 2;
+  string payload = 3;
+  string timestamp = 4;
+}
+
+message SystemMessage {
+  string id = 1;
+  string system_type = 2;
+  string content = 3;
+  string timestamp = 4;
+}
