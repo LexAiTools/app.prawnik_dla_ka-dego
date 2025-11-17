@@ -7,13 +7,13 @@ import LawyersList from './LawyersList';
 import Chat from './Chat';
 import NavigationBar from './NavigationBar';
 import PaymentPopup from './PaymentPopup';
-import { AuthPopups } from './AuthPopups';
 import MediatorDialog from './MediatorDialog';
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDocuments, uploadDocument, saveQuestion } from '@/lib/supabase-helpers';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export interface Document {
   id: number | string;
@@ -51,6 +51,7 @@ export interface TokenPackage {
 const AsystentPrawny = () => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState<'chat' | 'documents' | 'lawyers'>('chat');
   const [activeDocument, setActiveDocument] = useState<Document | null>(null);
@@ -98,17 +99,22 @@ const AsystentPrawny = () => {
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-  const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [showRegisterPopup, setShowRegisterPopup] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationSent, setVerificationSent] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   
   const [showMediatorDialog, setShowMediatorDialog] = useState(false);
   const tabsRef = useRef<HTMLDivElement | null>(null);
+  
+  // Check authentication and redirect to /auth if not logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   
   const { data: documents = [], isLoading: isLoadingDocuments } = useQuery({
     queryKey: ['documents'],
@@ -145,20 +151,6 @@ const AsystentPrawny = () => {
     }
   }, [documents, activeDocument, messages]);
   
-  useEffect(() => {
-    const loginStatus = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loginStatus);
-    
-    const checkAuthStatus = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setIsLoggedIn(true);
-        localStorage.setItem('isLoggedIn', 'true');
-      }
-    };
-    
-    checkAuthStatus();
-  }, []);
   
   const addDocumentMutation = useMutation({
     mutationFn: async ({ name, type, content }: { name: string, type: string, content: string }) => {
@@ -495,6 +487,8 @@ Kluczowe informacje:
 
   const isMobileView = isMobile;
   
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // Always logged in since we redirect unauthenticated users
+
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-800 text-white">
       <HeaderBar 
@@ -505,8 +499,8 @@ Kluczowe informacje:
         setShowMenu={setShowMenu}
         isLoggedIn={isLoggedIn}
         setShowPaymentPopup={setShowPaymentPopup}
-        setShowLoginPopup={setShowLoginPopup}
-        setShowRegisterPopup={setShowRegisterPopup}
+        setShowLoginPopup={() => navigate('/auth')}
+        setShowRegisterPopup={() => navigate('/auth')}
         onShowMediator={handleShowMediator}
       />
 
@@ -639,20 +633,6 @@ Kluczowe informacje:
           setShowPaymentPopup={setShowPaymentPopup}
         />
       )}
-      
-      <AuthPopups
-        showLoginPopup={showLoginPopup}
-        showRegisterPopup={showRegisterPopup}
-        setShowLoginPopup={setShowLoginPopup}
-        setShowRegisterPopup={setShowRegisterPopup}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
-        verificationCode={verificationCode}
-        setVerificationCode={setVerificationCode}
-        verificationSent={verificationSent}
-        setVerificationSent={setVerificationSent}
-        setIsLoggedIn={setIsLoggedIn}
-      />
       
       <MediatorDialog 
         open={showMediatorDialog}
