@@ -1,5 +1,5 @@
 // @ts-nocheck - types will be regenerated after migration
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table,
@@ -12,8 +12,18 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 export const UsersView = () => {
+  const queryClient = useQueryClient();
+  
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
@@ -108,6 +118,37 @@ export const UsersView = () => {
     }
   };
 
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      // Usuń wszystkie obecne role użytkownika
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+      
+      // Dodaj nową rolę
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: newRole });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Rola zaktualizowana",
+        description: `Nowa rola: ${getRoleLabel(newRole)}`,
+      });
+      
+      // Odśwież dane
+      queryClient.invalidateQueries({ queryKey: ['admin-user-roles'] });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Błąd aktualizacji roli",
+        description: error.message,
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -147,13 +188,19 @@ export const UsersView = () => {
                 <TableCell>{user.phone_number || '-'}</TableCell>
                 <TableCell>{user.email || '-'}</TableCell>
                 <TableCell>
-                  <div className="flex gap-1 flex-wrap">
-                    {userRoles?.[user.id]?.map((role: string) => (
-                      <Badge key={role} variant={getRoleBadgeVariant(role)}>
-                        {getRoleLabel(role)}
-                      </Badge>
-                    )) || <span className="text-muted-foreground text-sm">Brak roli</span>}
-                  </div>
+                  <Select
+                    value={userRoles?.[user.id]?.[0] || 'user'}
+                    onValueChange={(value) => handleRoleChange(user.id, value)}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Wybierz rolę" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">👤 Użytkownik</SelectItem>
+                      <SelectItem value="lawyer">⚖️ Prawnik</SelectItem>
+                      <SelectItem value="admin">👑 Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>{user.token_balance || 0}</TableCell>
                 <TableCell>{documentsCount?.[user.id] || 0}</TableCell>
