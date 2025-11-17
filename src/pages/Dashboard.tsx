@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserStore } from '@/stores/userStore';
+import { useAnonymousSession } from '@/hooks/useAnonymousSession';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,17 +18,36 @@ import PaymentPopup from '@/components/PaymentPopup';
 import UserProfile from '@/components/UserProfile';
 import HelpDialog from '@/components/HelpDialog';
 import MediatorDialog from '@/components/MediatorDialog';
+import { AuthDialog } from '@/components/auth/AuthDialog';
 import { Document } from '@/components/AsystentPrawny';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tokenBalance, fetchTokenBalance } = useUserStore();
+  
+  // Session state
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  
+  // Dialog states
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [showMediatorDialog, setShowMediatorDialog] = useState(false);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authDialogTab, setAuthDialogTab] = useState<'signin' | 'signup' | 'forgot'>('signin');
   const [activeTab, setActiveTab] = useState('chat');
   const [activeDocument, setActiveDocument] = useState<Document | null>(null);
+  
+  // Anonymous session for non-logged-in users
+  const anonymousSession = useAnonymousSession();
+  
+  // Calculate remaining credits
+  const remainingCredits = session 
+    ? tokenBalance ?? 0
+    : Math.max(0, 5 - (anonymousSession.questionsAsked + anonymousSession.documentsUploaded));
+  
+  const isOverLimit = !session && anonymousSession.isOverLimit;
 
   const { data: documents = [], refetch: refetchDocuments } = useQuery({
     queryKey: ['documents'],
@@ -58,25 +79,30 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      console.log('🔐 Auth state changed:', event, currentSession);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession) {
+        // Logged in - fetch token balance
+        fetchTokenBalance();
       }
-      fetchTokenBalance();
-    };
+    });
 
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        navigate('/auth');
+    // Then check current session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession) {
+        fetchTokenBalance();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, fetchTokenBalance]);
+  }, [fetchTokenBalance]);
 
   const handleDeleteDocument = async (documentId: string | number) => {
     try {
@@ -135,14 +161,16 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">Panel Użytkownika</h1>
           
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowPaymentPopup(true)}
-              className="gap-2"
-            >
-              <Coins className="w-4 h-4" />
-              <span className="font-semibold">{tokenBalance ?? 0} tokenów</span>
-            </Button>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
+              <Coins className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">
+                {session ? (
+                  `${tokenBalance ?? 0} tokenów`
+                ) : (
+                  `${remainingCredits}/5 darmowych`
+                )}
+              </span>
+            </div>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -150,29 +178,73 @@ export default function Dashboard() {
                   <Menu className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
-                  <User className="mr-2 h-4 w-4" />
-                  Moje konto
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setShowHelpDialog(true)}>
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  Pomoc
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setShowMediatorDialog(true)}>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Mediator
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleLogout();
-                  }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Wyloguj się
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-56 bg-background z-50">
+                {session ? (
+                  // Menu for logged-in users
+                  <>
+                    <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
+                      <User className="mr-2 h-4 w-4" />
+                      Moje konto
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setShowPaymentPopup(true)}>
+                      <Coins className="mr-2 h-4 w-4" />
+                      Dokup tokeny
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setShowHelpDialog(true)}>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Pomoc
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setShowMediatorDialog(true)}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Mediator
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogout();
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Wyloguj się
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  // Menu for anonymous users
+                  <>
+                    <DropdownMenuItem 
+                      onSelect={() => {
+                        setShowAuthDialog(true);
+                        setAuthDialogTab('signin');
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Zaloguj się
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onSelect={() => {
+                        setShowAuthDialog(true);
+                        setAuthDialogTab('signup');
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Zarejestruj się
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onSelect={() => setShowPaymentPopup(true)}
+                      disabled={!isOverLimit}
+                    >
+                      <Coins className="mr-2 h-4 w-4" />
+                      Dokup kredyty
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => setShowHelpDialog(true)}>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Pomoc
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -240,6 +312,12 @@ export default function Dashboard() {
       <MediatorDialog
         open={showMediatorDialog}
         onOpenChange={setShowMediatorDialog}
+      />
+      
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        defaultTab={authDialogTab}
       />
     </div>
   );
