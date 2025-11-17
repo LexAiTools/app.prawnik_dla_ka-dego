@@ -5,19 +5,26 @@ import { useUserStore } from '@/stores/userStore';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Coins } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { LogOut, Coins, User, HelpCircle, Shield, Menu } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import DocumentsList from '@/components/DocumentsList';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { ConversationHistory } from '@/components/ConversationHistory';
 import PaymentPopup from '@/components/PaymentPopup';
+import UserProfile from '@/components/UserProfile';
+import HelpDialog from '@/components/HelpDialog';
+import MediatorDialog from '@/components/MediatorDialog';
 import { Document } from '@/components/AsystentPrawny';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tokenBalance, fetchTokenBalance } = useUserStore();
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [showMediatorDialog, setShowMediatorDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
   const [activeDocument, setActiveDocument] = useState<Document | null>(null);
 
@@ -123,10 +130,32 @@ export default function Dashboard() {
               <span className="font-semibold">{tokenBalance ?? 0} tokenów</span>
             </Button>
             
-            <Button variant="ghost" onClick={handleLogout} className="gap-2">
-              <LogOut className="w-4 h-4" />
-              Wyloguj
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowUserProfile(true)}>
+                  <User className="mr-2 h-4 w-4" />
+                  Moje konto
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowHelpDialog(true)}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Pomoc
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowMediatorDialog(true)}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Mediator
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Wyloguj się
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -174,6 +203,25 @@ export default function Dashboard() {
           setShowPaymentPopup={setShowPaymentPopup}
         />
       )}
+
+      <UserProfile
+        open={showUserProfile}
+        onOpenChange={setShowUserProfile}
+        onBuyTokens={() => {
+          setShowUserProfile(false);
+          setShowPaymentPopup(true);
+        }}
+      />
+
+      <HelpDialog
+        open={showHelpDialog}
+        onOpenChange={setShowHelpDialog}
+      />
+
+      <MediatorDialog
+        open={showMediatorDialog}
+        onOpenChange={setShowMediatorDialog}
+      />
     </div>
   );
 }
