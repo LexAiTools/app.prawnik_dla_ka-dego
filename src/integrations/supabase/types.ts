@@ -79,8 +79,10 @@ export type Database = {
           full_name: string
           hourly_rate: number
           id: string
+          is_active: boolean | null
           is_available: boolean | null
           specialization: string
+          user_id: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -89,8 +91,10 @@ export type Database = {
           full_name: string
           hourly_rate: number
           id?: string
+          is_active?: boolean | null
           is_available?: boolean | null
           specialization: string
+          user_id?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -99,8 +103,10 @@ export type Database = {
           full_name?: string
           hourly_rate?: number
           id?: string
+          is_active?: boolean | null
           is_available?: boolean | null
           specialization?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -296,7 +302,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "lawyer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -424,7 +430,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "lawyer"],
     },
   },
 } as const
