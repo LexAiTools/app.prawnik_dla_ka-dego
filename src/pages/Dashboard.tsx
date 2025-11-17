@@ -109,9 +109,23 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success('Wylogowano pomyślnie');
-    navigate('/auth');
+    console.log('🚪 Wylogowywanie...');
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('❌ Błąd Supabase signOut:', error);
+        throw error;
+      }
+      
+      console.log('✅ Wylogowano pomyślnie');
+      toast.success('Wylogowano pomyślnie');
+      // Przekierowanie obsługuje listener onAuthStateChange
+    } catch (error) {
+      console.error('❌ Błąd wylogowania:', error);
+      toast.error('Błąd wylogowania');
+    }
   };
 
   return (
@@ -150,7 +164,12 @@ export default function Dashboard() {
                   Mediator
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={handleLogout}>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Wyloguj się
                 </DropdownMenuItem>
