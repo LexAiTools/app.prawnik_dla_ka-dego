@@ -320,6 +320,29 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
                   minLength={6}
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label>Typ konta</Label>
+                <RadioGroup 
+                  value={selectedRole} 
+                  onValueChange={(value) => setSelectedRole(value as 'user' | 'lawyer')}
+                  disabled={loading}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="user" id="role-user" />
+                    <Label htmlFor="role-user" className="font-normal cursor-pointer">
+                      👤 Użytkownik - dostęp do asystenta prawnego
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="lawyer" id="role-lawyer" />
+                    <Label htmlFor="role-lawyer" className="font-normal cursor-pointer">
+                      ⚖️ Prawnik - panel prawnika + aplikacja
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
