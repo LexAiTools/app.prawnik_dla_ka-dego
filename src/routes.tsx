@@ -5,7 +5,7 @@ import LandingPage from "./pages/LandingPage";
 import ChatDemo from "./pages/ChatDemo";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import Index from "./pages/Index";
 import LawyerDashboard from "./pages/LawyerDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import { DashboardView } from "./components/admin/DashboardView";
@@ -23,8 +23,12 @@ export const router = createBrowserRouter([
     element: <Auth />,
   },
   {
+    path: "/dashboard",
+    element: <Index />,
+  },
+  {
     path: "/dashboard/:userId",
-    element: <Dashboard />,
+    element: <Index />,
   },
   {
     path: "/user-dashboard",

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import Dashboard from './Dashboard';
+import Index from './Index';
 
 const UserDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +55,7 @@ const UserDashboard = () => {
     return null;
   }
 
-  return <Dashboard />;
+  return <Index />;
 };
 
 export default UserDashboard;
