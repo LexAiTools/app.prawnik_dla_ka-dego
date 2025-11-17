@@ -8,6 +8,11 @@ import { useEffect } from "react";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import { DashboardView } from "./components/admin/DashboardView";
+import { UsersView } from "./components/admin/UsersView";
+import { LawyersView } from "./components/admin/LawyersView";
+import { PackagesView } from "./components/admin/PackagesView";
 import { AssistantService } from "./services/AssistantService";
 import { useAssistantStore } from "./stores/assistantStore";
 
@@ -41,7 +46,12 @@ const App = () => {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/dashboard" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/admin" element={<Admin />}>
+              <Route index element={<DashboardView />} />
+              <Route path="users" element={<UsersView />} />
+              <Route path="lawyers" element={<LawyersView />} />
+              <Route path="packages" element={<PackagesView />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
