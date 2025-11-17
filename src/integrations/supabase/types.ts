@@ -14,32 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_sessions: {
+        Row: {
+          created_at: string | null
+          documents_uploaded: number | null
+          id: string
+          questions_asked: number | null
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          documents_uploaded?: number | null
+          id?: string
+          questions_asked?: number | null
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          documents_uploaded?: number | null
+          id?: string
+          questions_asked?: number | null
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
+          anonymous_session_id: string | null
           created_at: string | null
           id: string
           title: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          anonymous_session_id?: string | null
           created_at?: string | null
           id?: string
           title?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          anonymous_session_id?: string | null
           created_at?: string | null
           id?: string
           title?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversations_anonymous_session_id_fkey"
+            columns: ["anonymous_session_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
+          anonymous_session_id: string | null
           created_at: string | null
           file_path: string
           file_size: number | null
@@ -47,9 +86,10 @@ export type Database = {
           id: string
           name: string
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          anonymous_session_id?: string | null
           created_at?: string | null
           file_path: string
           file_size?: number | null
@@ -57,9 +97,10 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          anonymous_session_id?: string | null
           created_at?: string | null
           file_path?: string
           file_size?: number | null
@@ -67,9 +108,17 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_anonymous_session_id_fkey"
+            columns: ["anonymous_session_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lawyers: {
         Row: {
@@ -112,33 +161,43 @@ export type Database = {
       }
       messages: {
         Row: {
+          anonymous_session_id: string | null
           content: string
           conversation_id: string
           created_at: string | null
           id: string
           role: string
           tokens_used: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          anonymous_session_id?: string | null
           content: string
           conversation_id: string
           created_at?: string | null
           id?: string
           role: string
           tokens_used?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          anonymous_session_id?: string | null
           content?: string
           conversation_id?: string
           created_at?: string | null
           id?: string
           role?: string
           tokens_used?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "messages_anonymous_session_id_fkey"
+            columns: ["anonymous_session_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
@@ -299,6 +358,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      transfer_anonymous_data_to_user: {
+        Args: { p_session_id: string; p_user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
