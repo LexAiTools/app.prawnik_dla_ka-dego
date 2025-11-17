@@ -1,13 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate('/dashboard');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleStartApp = () => {
     navigate('/dashboard');
@@ -58,6 +70,17 @@ const LandingPage = () => {
       >
         {/* Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-black/10"></div>
+        
+        {/* Login button in top-right corner */}
+        <div className="absolute top-4 right-4 z-20">
+          <Button 
+            variant="outline" 
+            className="bg-white/10 text-white border-white/20 hover:bg-white/20"
+            onClick={() => navigate('/auth')}
+          >
+            Zaloguj się
+          </Button>
+        </div>
         
         {/* Top section with title and subtitle */}
         <div className="flex flex-col items-center text-center px-6 pt-16 pb-12 text-white relative z-10">

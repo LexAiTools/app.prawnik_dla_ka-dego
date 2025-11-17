@@ -1,7 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Menu, CreditCard, User, LogIn, LogOut, Lock, HelpCircle, PlayCircle, Info, Shield, HandIcon } from 'lucide-react';
 import { Document } from './AsystentPrawny';
+import { useUserStore } from '@/stores/userStore';
 import { 
   Dialog,
   DialogContent,
@@ -44,6 +45,13 @@ const HeaderBar = ({
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLIFrameElement>(null);
   const isMobile = useIsMobile();
+  const { tokenBalance, fetchTokenBalance } = useUserStore();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchTokenBalance();
+    }
+  }, [isLoggedIn, fetchTokenBalance]);
 
   const handleVideoPlay = () => {
     setShowVideo(true);
@@ -85,7 +93,7 @@ const HeaderBar = ({
             className="bg-blue-800 rounded-full px-3 py-1 text-sm flex items-center"
             onClick={() => setShowPaymentPopup(true)}
           >
-            <span>Tokeny: 500</span>
+            <span>Tokeny: {tokenBalance}</span>
             <CreditCard size={14} className="ml-1" />
           </button>
           <button 

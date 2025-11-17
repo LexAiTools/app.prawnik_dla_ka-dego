@@ -1,6 +1,5 @@
 
 import { createBrowserRouter } from "react-router-dom";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import ChatDemo from "./pages/ChatDemo";
@@ -24,10 +23,6 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <Dashboard />,
-  },
-  {
-    path: "/index",
-    element: <Index />,
   },
   {
     path: "/chat-demo",
