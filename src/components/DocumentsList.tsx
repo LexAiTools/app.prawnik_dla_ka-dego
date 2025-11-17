@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { FileText, Image, Plus, Trash2, Eye } from 'lucide-react';
 import { Document } from './AsystentPrawny';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   AlertDialog,
   AlertDialogCancel,
@@ -34,7 +36,7 @@ interface DocumentsListProps {
   setActiveDocument: (document: Document) => void;
   setActiveTab: (tab: 'chat' | 'documents') => void;
   fileInputRef?: React.RefObject<HTMLInputElement>;
-  onDeleteDocument?: (documentId: number | string) => void;
+  onDeleteDocument?: (documentId: string | number) => void;
   setShowUploadOptions?: (show: boolean) => void;
 }
 
@@ -86,16 +88,39 @@ const DocumentsList = ({
     }
   };
   
-  const handlePreviewClick = (e: React.MouseEvent, doc: Document) => {
+  const fetchDocumentContent = async (filePath: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(filePath);
+
+      if (error) throw error;
+
+      const text = await data.text();
+      return text;
+    } catch (error) {
+      console.error('Error fetching document:', error);
+      toast.error('Błąd pobierania zawartości dokumentu');
+      return 'Błąd pobierania zawartości dokumentu';
+    }
+  };
+
+  const handlePreviewClick = async (e: React.MouseEvent, doc: Document) => {
     e.stopPropagation();
     setPreviewDocument(doc);
     
-    const documentContent = doc.content || 'Nie znaleziono zawartości dokumentu.';
+    let documentContent = 'Ładowanie zawartości dokumentu...';
+    setAnonymizedContent(documentContent);
+    setIsPreviewDialogOpen(true);
+    
+    if (doc.file_path) {
+      documentContent = await fetchDocumentContent(doc.file_path);
+    } else {
+      documentContent = doc.content || 'Nie znaleziono zawartości dokumentu.';
+    }
     
     const anonymized = anonymizeText(documentContent);
     setAnonymizedContent(anonymized);
-    
-    setIsPreviewDialogOpen(true);
   };
   
   const truncateName = (name: string, maxLength: number = 20) => {

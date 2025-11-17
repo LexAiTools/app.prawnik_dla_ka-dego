@@ -20,7 +20,8 @@ export interface Document {
   name: string;
   type: string;
   date: string;
-  content?: string; // Dodane pole zawartości dokumentu
+  content?: string;
+  file_path?: string;
 }
 
 export interface Lawyer {
