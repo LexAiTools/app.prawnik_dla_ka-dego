@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface AuthDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'user' | 'lawyer'>('user');
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+      setSelectedRole('user');
       setResetSent(false);
       setLoading(false);
     }
@@ -130,6 +133,21 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
       
       // If user is created and logged in immediately (auto-confirm enabled)
       if (data.user) {
+        // If user selected 'lawyer', update their role
+        if (selectedRole === 'lawyer') {
+          // Remove default 'user' role
+          await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', data.user.id)
+            .eq('role', 'user');
+          
+          // Add 'lawyer' role
+          await supabase
+            .from('user_roles')
+            .insert({ user_id: data.user.id, role: 'lawyer' });
+        }
+        
         navigate(`/dashboard/${data.user.id}`);
       }
       
