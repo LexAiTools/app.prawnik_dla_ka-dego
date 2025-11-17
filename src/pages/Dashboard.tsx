@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserStore } from '@/stores/userStore';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import DocumentsList from '@/components/DocumentsList';
+import { DocumentUpload } from '@/components/DocumentUpload';
 import { ConversationHistory } from '@/components/ConversationHistory';
 import PaymentPopup from '@/components/PaymentPopup';
 import { Document } from '@/components/AsystentPrawny';
@@ -17,8 +19,36 @@ export default function Dashboard() {
   const { tokenBalance, fetchTokenBalance } = useUserStore();
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
-  const [documents, setDocuments] = useState<Document[]>([]);
   const [activeDocument, setActiveDocument] = useState<Document | null>(null);
+
+  const { data: documents = [], refetch: refetchDocuments } = useQuery({
+    queryKey: ['documents'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching documents:', error);
+        toast.error('Błąd pobierania dokumentów');
+        return [];
+      }
+
+      return (data || []).map((dbDoc: any): Document => ({
+        id: dbDoc.id,
+        name: dbDoc.name,
+        type: dbDoc.file_type.startsWith('image/') ? 'image' : 'file',
+        content: '',
+        date: new Date(dbDoc.updated_at).toLocaleDateString('pl-PL'),
+        file_path: dbDoc.file_path
+      }));
+    }
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -40,6 +70,36 @@ export default function Dashboard() {
 
     return () => subscription.unsubscribe();
   }, [navigate, fetchTokenBalance]);
+
+  const handleDeleteDocument = async (documentId: string | number) => {
+    try {
+      const docToDelete = documents.find(d => d.id === documentId);
+      if (!docToDelete || !docToDelete.file_path) return;
+
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([docToDelete.file_path]);
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', String(documentId));
+
+      if (dbError) throw dbError;
+
+      toast.success('Dokument usunięty');
+      refetchDocuments();
+      
+      if (activeDocument?.id === documentId) {
+        setActiveDocument(null);
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Błąd usuwania dokumentu');
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -84,11 +144,21 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
+            <div className="mb-4">
+              <DocumentUpload 
+                onUploadComplete={() => {
+                  refetchDocuments();
+                  toast.success('Dokument dodany pomyślnie');
+                }} 
+              />
+            </div>
+            
             <DocumentsList 
               documents={documents}
               activeDocument={activeDocument}
               setActiveDocument={setActiveDocument}
               setActiveTab={setActiveTab}
+              onDeleteDocument={handleDeleteDocument}
             />
           </TabsContent>
 
