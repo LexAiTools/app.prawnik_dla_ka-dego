@@ -7,6 +7,7 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import LawyerDashboard from "./pages/LawyerDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import { DashboardView } from "./components/admin/DashboardView";
 import { UsersView } from "./components/admin/UsersView";
 import { LawyersView } from "./components/admin/LawyersView";
@@ -22,8 +23,12 @@ export const router = createBrowserRouter([
     element: <Auth />,
   },
   {
-    path: "/dashboard",
+    path: "/dashboard/:userId",
     element: <Dashboard />,
+  },
+  {
+    path: "/user-dashboard",
+    element: <UserDashboard />,
   },
   {
     path: "/lawyer-dashboard",
