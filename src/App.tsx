@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import { DashboardView } from "./components/admin/DashboardView";
 import { UsersView } from "./components/admin/UsersView";
@@ -45,6 +46,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Index />} />
             <Route path="/admin" element={<Admin />}>
               <Route index element={<DashboardView />} />
@@ -52,6 +54,7 @@ const App = () => {
               <Route path="lawyers" element={<LawyersView />} />
               <Route path="packages" element={<PackagesView />} />
             </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
