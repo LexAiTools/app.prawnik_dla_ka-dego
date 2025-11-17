@@ -4,11 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { AuthDialog } from '@/components/auth/AuthDialog';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [defaultTab, setDefaultTab] = useState<'signin' | 'signup' | 'forgot'>('signin');
 
   // Redirect logged-in users to dashboard
   useEffect(() => {
@@ -71,12 +74,25 @@ const LandingPage = () => {
         {/* Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-black/10"></div>
         
-        {/* Login button in top-right corner */}
-        <div className="absolute top-4 right-4 z-20">
+        {/* Auth buttons in top-right corner */}
+        <div className="absolute top-4 right-4 z-20 flex gap-2">
           <Button 
             variant="outline" 
             className="bg-white/10 text-white border-white/20 hover:bg-white/20"
-            onClick={() => navigate('/auth')}
+            onClick={() => {
+              setDefaultTab('signup');
+              setShowAuthDialog(true);
+            }}
+          >
+            Zarejestruj się
+          </Button>
+          <Button 
+            variant="outline" 
+            className="bg-white/10 text-white border-white/20 hover:bg-white/20"
+            onClick={() => {
+              setDefaultTab('signin');
+              setShowAuthDialog(true);
+            }}
           >
             Zaloguj się
           </Button>
@@ -127,6 +143,13 @@ const LandingPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Auth Dialog */}
+      <AuthDialog 
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        defaultTab={defaultTab}
+      />
     </div>
   );
 };
