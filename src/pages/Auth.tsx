@@ -87,11 +87,11 @@ const Auth = () => {
           <CardDescription>Zaloguj się lub utwórz nowe konto</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Logowanie</TabsTrigger>
-              <TabsTrigger value="signup">Rejestracja</TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin" onClick={() => setIsSignUp(false)}>Logowanie</TabsTrigger>
+            <TabsTrigger value="signup" onClick={() => setIsSignUp(true)}>Rejestracja</TabsTrigger>
+          </TabsList>
             
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
