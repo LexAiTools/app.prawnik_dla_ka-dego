@@ -10,12 +10,15 @@ import ChatInterface from '@/components/ChatInterface';
 import DocumentsList from '@/components/DocumentsList';
 import { ConversationHistory } from '@/components/ConversationHistory';
 import PaymentPopup from '@/components/PaymentPopup';
+import { Document } from '@/components/AsystentPrawny';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { tokenBalance, fetchTokenBalance } = useUserStore();
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [activeTab, setActiveTab] = useState('chat');
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [activeDocument, setActiveDocument] = useState<Document | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -81,7 +84,12 @@ export default function Dashboard() {
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
-            <DocumentsList />
+            <DocumentsList 
+              documents={documents}
+              activeDocument={activeDocument}
+              setActiveDocument={setActiveDocument}
+              setActiveTab={setActiveTab}
+            />
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
