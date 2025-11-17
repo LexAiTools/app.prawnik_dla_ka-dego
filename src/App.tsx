@@ -48,6 +48,7 @@ const App = () => {
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Index />} />
+            <Route path="/dashboard/:userId" element={<Index />} />
             <Route path="/admin" element={<Admin />}>
               <Route index element={<DashboardView />} />
               <Route path="users" element={<UsersView />} />

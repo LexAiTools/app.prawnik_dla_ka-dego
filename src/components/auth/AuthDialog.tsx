@@ -79,10 +79,10 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
           } else if (userRoles.includes('lawyer')) {
             navigate('/lawyer-dashboard');
           } else {
-            navigate('/dashboard');
+            navigate(`/dashboard/${data.user.id}`);
           }
         } else {
-          navigate('/dashboard');
+          navigate(`/dashboard/${data.user.id}`);
         }
       }
     } catch (error: any) {
@@ -118,7 +118,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -128,9 +128,14 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
       
       if (error) throw error;
       
+      // If user is created and logged in immediately (auto-confirm enabled)
+      if (data.user) {
+        navigate(`/dashboard/${data.user.id}`);
+      }
+      
       toast({
         title: "Konto utworzone!",
-        description: "Sprawdź email aby potwierdzić.",
+        description: data.user ? "Zalogowano pomyślnie!" : "Sprawdź email aby potwierdzić.",
       });
       onOpenChange(false);
     } catch (error: any) {

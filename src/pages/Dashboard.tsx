@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserStore } from '@/stores/userStore';
@@ -23,6 +23,7 @@ import { Document } from '@/components/AsystentPrawny';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId?: string }>();
   const { tokenBalance, fetchTokenBalance } = useUserStore();
   
   // Session state
@@ -88,6 +89,24 @@ export default function Dashboard() {
       if (currentSession) {
         // Logged in - fetch token balance
         fetchTokenBalance();
+        
+        const currentUserId = currentSession.user.id;
+        
+        // If we're on /dashboard (no UUID), redirect to /dashboard/{uuid}
+        if (!userId) {
+          navigate(`/dashboard/${currentUserId}`, { replace: true });
+        } 
+        // If UUID in URL doesn't match logged-in user, redirect to correct one
+        else if (userId !== currentUserId) {
+          navigate(`/dashboard/${currentUserId}`, { replace: true });
+          toast.error('Nie masz dostępu do tego dashboardu');
+        }
+      } else {
+        // User not logged in
+        // If there's a UUID in URL, redirect to /dashboard (without UUID)
+        if (userId) {
+          navigate('/dashboard', { replace: true });
+        }
       }
     });
 
@@ -98,11 +117,24 @@ export default function Dashboard() {
       
       if (currentSession) {
         fetchTokenBalance();
+        
+        const currentUserId = currentSession.user.id;
+        
+        if (!userId) {
+          navigate(`/dashboard/${currentUserId}`, { replace: true });
+        } else if (userId !== currentUserId) {
+          navigate(`/dashboard/${currentUserId}`, { replace: true });
+          toast.error('Nie masz dostępu do tego dashboardu');
+        }
+      } else {
+        if (userId) {
+          navigate('/dashboard', { replace: true });
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchTokenBalance]);
+  }, [fetchTokenBalance, userId, navigate]);
 
   const handleDeleteDocument = async (documentId: string | number) => {
     try {
