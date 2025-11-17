@@ -137,20 +137,20 @@ export default function Dashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowUserProfile(true)}>
+                <DropdownMenuItem onSelect={() => setShowUserProfile(true)}>
                   <User className="mr-2 h-4 w-4" />
                   Moje konto
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowHelpDialog(true)}>
+                <DropdownMenuItem onSelect={() => setShowHelpDialog(true)}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Pomoc
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowMediatorDialog(true)}>
+                <DropdownMenuItem onSelect={() => setShowMediatorDialog(true)}>
                   <Shield className="mr-2 h-4 w-4" />
                   Mediator
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onSelect={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Wyloguj się
                 </DropdownMenuItem>
