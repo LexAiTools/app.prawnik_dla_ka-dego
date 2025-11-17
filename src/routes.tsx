@@ -6,6 +6,7 @@ import ChatDemo from "./pages/ChatDemo";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import LawyerDashboard from "./pages/LawyerDashboard";
 import { DashboardView } from "./components/admin/DashboardView";
 import { UsersView } from "./components/admin/UsersView";
 import { LawyersView } from "./components/admin/LawyersView";
@@ -23,6 +24,10 @@ export const router = createBrowserRouter([
   {
     path: "/dashboard",
     element: <Dashboard />,
+  },
+  {
+    path: "/lawyer-dashboard",
+    element: <LawyerDashboard />,
   },
   {
     path: "/chat-demo",

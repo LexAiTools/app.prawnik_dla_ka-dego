@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 export const UsersView = () => {
   const { data: users, isLoading } = useQuery({
@@ -66,6 +67,47 @@ export const UsersView = () => {
     },
   });
 
+  const { data: userRoles } = useQuery({
+    queryKey: ['admin-user-roles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      if (error) throw error;
+      
+      const rolesByUser = data.reduce((acc: any, ur: any) => {
+        if (ur.user_id) {
+          if (!acc[ur.user_id]) acc[ur.user_id] = [];
+          acc[ur.user_id].push(ur.role);
+        }
+        return acc;
+      }, {});
+      
+      return rolesByUser;
+    },
+  });
+
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'lawyer': return 'default';
+      case 'moderator': return 'secondary';
+      case 'user': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'Admin';
+      case 'lawyer': return 'Prawnik';
+      case 'moderator': return 'Moderator';
+      case 'user': return 'Użytkownik';
+      default: return role;
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -92,6 +134,7 @@ export const UsersView = () => {
             <TableRow>
               <TableHead>Numer telefonu</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Saldo tokenów</TableHead>
               <TableHead>Dokumenty</TableHead>
               <TableHead>Pytania</TableHead>
@@ -103,6 +146,15 @@ export const UsersView = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.phone_number || '-'}</TableCell>
                 <TableCell>{user.email || '-'}</TableCell>
+                <TableCell>
+                  <div className="flex gap-1 flex-wrap">
+                    {userRoles?.[user.id]?.map((role: string) => (
+                      <Badge key={role} variant={getRoleBadgeVariant(role)}>
+                        {getRoleLabel(role)}
+                      </Badge>
+                    )) || <span className="text-muted-foreground text-sm">Brak roli</span>}
+                  </div>
+                </TableCell>
                 <TableCell>{user.token_balance || 0}</TableCell>
                 <TableCell>{documentsCount?.[user.id] || 0}</TableCell>
                 <TableCell>{questionsCount?.[user.id] || 0}</TableCell>

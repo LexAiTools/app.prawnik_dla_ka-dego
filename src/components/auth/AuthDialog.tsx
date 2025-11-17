@@ -51,7 +51,7 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -62,7 +62,29 @@ export const AuthDialog = ({ open, onOpenChange, defaultTab = 'signin' }: AuthDi
         title: "Zalogowano pomyślnie!",
       });
       onOpenChange(false);
-      navigate('/dashboard');
+      
+      // Check user role and redirect accordingly
+      if (data.user) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id);
+        
+        if (roles && roles.length > 0) {
+          const userRoles = roles.map(r => r.role);
+          
+          // Priority: admin > lawyer > user
+          if (userRoles.includes('admin')) {
+            navigate('/admin');
+          } else if (userRoles.includes('lawyer')) {
+            navigate('/lawyer-dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          navigate('/dashboard');
+        }
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
