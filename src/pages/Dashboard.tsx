@@ -79,62 +79,53 @@ export default function Dashboard() {
     }
   });
 
+  // useEffect #1 - Auth state management only
   useEffect(() => {
-    // Set up auth state listener first
+    console.log('🔧 Dashboard mounted, setting up auth listener');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       console.log('🔐 Auth state changed:', event, currentSession);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession) {
-        // Logged in - fetch token balance
         fetchTokenBalance();
-        
-        const currentUserId = currentSession.user.id;
-        
-        // If we're on /dashboard (no UUID), redirect to /dashboard/{uuid}
-        if (!userId) {
-          navigate(`/dashboard/${currentUserId}`, { replace: true });
-        } 
-        // If UUID in URL doesn't match logged-in user, redirect to correct one
-        else if (userId !== currentUserId) {
-          navigate(`/dashboard/${currentUserId}`, { replace: true });
-          toast.error('Nie masz dostępu do tego dashboardu');
-        }
-      } else {
-        // User not logged in
-        // If there's a UUID in URL, redirect to /dashboard (without UUID)
-        if (userId) {
-          navigate('/dashboard', { replace: true });
-        }
       }
     });
 
-    // Then check current session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('📋 Initial session:', currentSession);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession) {
         fetchTokenBalance();
-        
-        const currentUserId = currentSession.user.id;
-        
-        if (!userId) {
-          navigate(`/dashboard/${currentUserId}`, { replace: true });
-        } else if (userId !== currentUserId) {
-          navigate(`/dashboard/${currentUserId}`, { replace: true });
-          toast.error('Nie masz dostępu do tego dashboardu');
-        }
-      } else {
-        if (userId) {
-          navigate('/dashboard', { replace: true });
-        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchTokenBalance, userId, navigate]);
+  }, [fetchTokenBalance]);
+
+  // useEffect #2 - Routing logic based on session and userId
+  useEffect(() => {
+    if (session) {
+      // Logged in user
+      const currentUserId = session.user.id;
+      
+      if (!userId) {
+        // On /dashboard without UUID → redirect to /dashboard/{uuid}
+        navigate(`/dashboard/${currentUserId}`, { replace: true });
+      } else if (userId !== currentUserId) {
+        // UUID in URL doesn't match → redirect to correct one
+        navigate(`/dashboard/${currentUserId}`, { replace: true });
+        toast.error('Nie masz dostępu do tego dashboardu');
+      }
+    } else if (userId) {
+      // Not logged in user on /dashboard/{uuid} → redirect to /dashboard
+      navigate('/dashboard', { replace: true });
+    }
+  }, [session, userId, navigate]);
 
   const handleDeleteDocument = async (documentId: string | number) => {
     try {
