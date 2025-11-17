@@ -5,6 +5,8 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import ChatDemo from "./pages/ChatDemo";
 import Admin from "./pages/Admin";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import { DashboardView } from "./components/admin/DashboardView";
 import { UsersView } from "./components/admin/UsersView";
 import { LawyersView } from "./components/admin/LawyersView";
@@ -16,11 +18,15 @@ export const router = createBrowserRouter([
     element: <LandingPage />,
   },
   {
-    path: "/index",
-    element: <Index />,
+    path: "/auth",
+    element: <Auth />,
   },
   {
     path: "/dashboard",
+    element: <Dashboard />,
+  },
+  {
+    path: "/index",
     element: <Index />,
   },
   {
